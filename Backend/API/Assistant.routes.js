@@ -13,7 +13,7 @@ router.post('/signup', assistantCtrl.signup)
 
 // router.post('/forgot-password', assistantCtrl.forgotPassword)
 
-// router.get('/get-appointment',authenticator.TokenAuthenticator, assistantCtrl.getAppointment)
+router.get('/get-appointment',authenticator.TokenAuthenticator, assistantCtrl.getAppointment)
 
 router.post('/set-appointment',authenticator.TokenAuthenticator, assistantCtrl.setAppointment)
 
