@@ -40,7 +40,7 @@ export default class AssistantDAO {
     }
 
     //method to setappointment
-   static async SetAppointment(
+    static async SetAppointment({
         appointee,
         appointer,
         creation_time,
@@ -48,54 +48,97 @@ export default class AssistantDAO {
         appointment_duration,
         appointment_purpose,
         appointment_description
-    ) {
-        // Check if the appointment already exists
-        let appointment = await cluster0
+      }) {
+        try {
+          // Check if the appointment already exists
+          let appointment = await cluster0
             .collection("appointments")
-            .findOne({ appointee, appointer });
+            .findOne({ "appointee": appointee });
     
-        if (appointment) {
+          if (appointment) {
             console.log("The appointment already exists", appointment);
     
             // If the appointment exists and has different information, update it
-            // if (
-            //     appointment.creation_time !== creation_time ||
-            //     appointment.appointment_time !== appointment_time ||
-            //     appointment.appointment_duration !== appointment_duration ||
-            //     appointment.appointment_purpose !== appointment_purpose ||
-            //     appointment.appointment_description !== appointment_description
-            // ) {
-            //     const result = await cluster0
-            //         .collection("appointments")
-            //         .findOneAndUpdate(
-            //             { appointee, appointer },
-            //             {
-            //                 $set: {
-            //                     creation_time,
-            //                     appointment_time,
-            //                     appointment_duration,
-            //                     appointment_purpose,
-            //                     appointment_description
-            //                 },
-            //             },
-            //             { returnOriginal: false }
-            //         );
-            //     appointment = result.value;
-            // }
-        } else {
-            // If the appointment does not exist, add it to the database
-            const result = await cluster0.collection("appointments").insertOne({
-                appointee,
-                appointer,
-                creation_time,
-                appointment_time,
-                appointment_duration,
-                appointment_purpose,
-                appointment_description
-            });
-            appointment = result;
-        }
+            if (
+              appointment.creation_time !== creation_time ||
+              appointment.appointment_time !== appointment_time ||
+              appointment.appointment_duration !== appointment_duration ||
+              appointment.appointment_purpose !== appointment_purpose ||
+              appointment.appointment_description !== appointment_description
+            ) {
+              let result = await cluster0
+                .collection("appointments")
+                .updateOne(
+                  { "appointee": appointee },
+                  {
+                    $set: {
+                      creation_time,
+                      appointment_time,
+                      appointment_duration,
+                      appointment_purpose,
+                      appointment_description
+                    }
+                  }
+                );
     
-        return appointment;
-    }
+              return result;
+            }
+    
+            // If the appointment exists and has the same information, return it
+            return appointment;
+          }
+    
+          // If the appointment doesn't exist, create it
+          let result = await cluster0
+            .collection("appointments")
+            .insertOne({
+              appointee,
+              appointer,
+              creation_time,
+              appointment_time,
+              appointment_duration,
+              appointment_purpose,
+              appointment_description
+            });
+    
+          return result;
+        } catch (e) {
+          console.error(`Unable to set appointment: ${e}`);
+          throw e;
+        }
+      }
+    
+      
+      static async getAppointment(appointmentId) {
+        try {
+          console.log('Attempting to retrieve appointment with ID:', appointmentId);
+          const appointment = await cluster0.collection("appointments").findOne({ _id: new ObjectId(appointmentId) });
+      
+          if (!appointment) {
+            console.log("Appointment not found");
+            return { message: "Appointment not found" };
+          }
+          
+          console.log('Appointment retrieved:', appointment);
+          return appointment;
+        } catch (e) {
+          console.error(`Unable to get appointment: ${e}`);
+          throw e;
+        }
+      }
+
+      static async getAppointmentsByUser(appointeeEmail) {
+        try {
+          const appointments = await cluster0
+            .collection("appointments")
+            .find({ appointee: appointeeEmail })
+            .toArray();
+    
+          return appointments;
+        } catch (e) {
+          console.error(`Unable to get appointments for user: ${e}`);
+          throw e;
+        }
+      }
+    
 }

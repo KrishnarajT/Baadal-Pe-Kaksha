@@ -58,8 +58,8 @@ static async login(req, res) {
     }
     static async getAppointment(req, res) {
         try {
-            const Ap_date = req.date;
-            const appointment = await AssistantDAO.getAppointment(Ap_date);
+            const Ap_id = req.appointment_id;
+            const appointment = await AssistantDAO.getAppointment(Ap_id);
     
             return res.status(200).json({ data: appointment, message: 'Appointment retrieved successfully' });
         } catch (err) {
@@ -95,5 +95,22 @@ static async login(req, res) {
             return res.status(500).json({ message: 'Error setting appointment' });
         }
     }
+        // Existing methods...
+      
+        static async getAppointmentsByUser(req, res) {
+          try {
+            const appointeeEmail = req.params.appointeeEmail; // Assuming 'appointeeEmail' is a parameter in the route
+            const appointments = await AssistantDAO.getAppointmentsByUser(appointeeEmail);
+      
+            if (!appointments || appointments.length === 0) {
+              return res.status(404).json({ message: 'No appointments found for the user' });
+            }
+      
+            return res.status(200).json({ data: appointments, message: 'Appointments retrieved successfully' });
+          } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Error retrieving appointments for the user' });
+          }
+        }
     
 }
